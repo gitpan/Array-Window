@@ -3,35 +3,24 @@
 # Formal testing for Array::Window
 
 use strict;
-use lib '../../../modules'; # For development testing
-use lib '../lib'; # For installation testing
+use File::Spec::Functions qw{:ALL};
+use lib catdir( updir(), updir(), 'modules' ), # Development testing
+        catdir( updir(), 'lib' );              # Installation testing
 use UNIVERSAL 'isa';
-use Test::Simple tests => 29;
-
-# Set up any needed globals
-use vars qw{$loaded};
-BEGIN {
-	$loaded = 0;
-	$| = 1;
-}
-
-
-
+use Test::More tests => 29;
 
 # Check their perl version
 BEGIN {
+	$| = 1;
 	ok( $] >= 5.005, "Your perl is new enough" );
 }
-	
+
 
 
 
 
 # Does the module load
-END { ok( 0, 'Array::Window loads' ) unless $loaded; }
-use Array::Window;
-$loaded = 1;
-ok( 1, 'Array::Window loads' );
+use_ok( 'Array::Window' );
 
 
 # Run the bulk of the tests
@@ -74,10 +63,10 @@ sub compare {
 		return 1;
 	} else {
 		return 0;
-	}	
+	}
 }
 
 __DATA__
 0-100:0-10  0-9:10:1  undef:10
 0-100:10-10 10-19:10:1  0:20
-0-100:98-10 91-100:10:1  81:undef 
+0-100:98-10 91-100:10:1  81:undef
