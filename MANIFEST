@@ -1,0 +1,7 @@
+Changes
+LICENSE
+MANIFEST
+Makefile.PL
+README
+lib/Array/Window.pm
+t/01_main.t
