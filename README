@@ -42,16 +42,13 @@ DESCRIPTION
     to 10. Computers refer to the first value as the '0th' element, with the
     same set starting at 0 and going up to 9.
 
-    The methods for this class return computer orientated values, so if you
-    were to generate a message for a particular window, it might go as
-    follows.
+    The normal methods for this class return computer orientated values. If
+    you want to generate values for human messages, you should instead use
+    the following.
 
-      print 'Displaying Widgets ' . ($Window->window_start + 1)
-            . ' to ' . ($Window->window_end + 1)
-            . ' of ' . ($Window->source_end + 1);
-
-    The inconvenience of this may be addressed in a later version of the
-    module.
+      print 'Displaying Widgets ' . $Window->human_window_start
+            . ' to ' . $Window->human_window_end
+            . ' of ' . $Window->human_source_end;
 
 METHODS
   new %options
@@ -119,6 +116,14 @@ METHODS
     Returns the desired window length. i.e. The value you originally
     entered.
 
+  human_window_start
+    Returns the index of the first value in the window in human terms ( 1 ..
+    n )
+
+  human_window_end
+    Returns the index of the last value in the window in human terms ( 1 ..
+    n )
+
   previous_start
     If a 'previous' window can be calculated, this will return the index of
     the start of the previous window.
@@ -166,8 +171,9 @@ SUPPORT
     For other issues, contact the author
 
 TO DO
-    - Determine how many windows there are. - "human_values" method to
-    return human readable values.
+    - Determine how many windows there are.
+
+    - Provide the option to only work at strict intervals
 
 AUTHOR
             Adam Kennedy ( maintainer )

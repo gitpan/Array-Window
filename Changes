@@ -1,5 +1,8 @@
 Revision history for Perl extension Array::Window
 
+0.4  Sat Mar 13 2004
+	- Added the ->human_* methods
+
 0.3  Thu Mar 11 2004
 	- Added the source_length method
 	- Added more flexible creation options, using source_length

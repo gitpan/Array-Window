@@ -5,7 +5,7 @@ use UNIVERSAL 'isa';
 
 use vars qw{$VERSION};
 BEGIN { 
-	$VERSION = 0.3;
+	$VERSION = 0.4;
 }
 
 # A description of the properties
@@ -175,11 +175,15 @@ sub _calculate_window_length {
 
 sub source_start          { $_[0]->{source_start}          }
 sub source_end            { $_[0]->{source_end}            }
+sub human_source_start    { $_[0]->{source_start} + 1      }
+sub human_source_end      { $_[0]->{source_end} + 1        }
 sub source_length         { $_[0]->{source_length}         }
 sub window_start          { $_[0]->{window_start}          }
+sub window_end            { $_[0]->{window_end}            }
+sub human_window_start    { $_[0]->{window_start} + 1      }
+sub human_window_end      { $_[0]->{window_end} + 1        }
 sub window_length         { $_[0]->{window_length}         }
 sub window_length_desired { $_[0]->{window_length_desired} }
-sub window_end            { $_[0]->{window_end}            }
 sub previous_start        { $_[0]->{previous_start}        }
 sub next_start            { $_[0]->{next_start}            }
 
@@ -338,14 +342,12 @@ that is, a set containing 10 things will start at 1 and go up to 10.
 Computers refer to the first value as the '0th' element, with the same set
 starting at 0 and going up to 9.
 
-The methods for this class return computer orientated values, so if you were
-to generate a message for a particular window, it might go as follows.
+The normal methods for this class return computer orientated values. If you
+want to generate values for human messages, you should instead use the following.
 
-  print 'Displaying Widgets ' . ($Window->window_start + 1)
-  	. ' to ' . ($Window->window_end + 1)
-  	. ' of ' . ($Window->source_end + 1);
-
-The inconvenience of this may be addressed in a later version of the module.
+  print 'Displaying Widgets ' . $Window->human_window_start
+  	. ' to ' . $Window->human_window_end
+  	. ' of ' . $Window->human_source_end;
 
 =head1 METHODS
 
@@ -420,6 +422,14 @@ has to give.
 
 Returns the desired window length. i.e. The value you originally entered.
 
+=head2 human_window_start
+
+Returns the index of the first value in the window in human terms ( 1 .. n )
+
+=head2 human_window_end
+
+Returns the index of the last value in the window in human terms ( 1 .. n )
+
 =head2 previous_start
 
 If a 'previous' window can be calculated, this will return the index of the
@@ -476,7 +486,8 @@ For other issues, contact the author
 =head1 TO DO
 
 - Determine how many windows there are.
-- C<human_values> method to return human readable values.
+
+- Provide the option to only work at strict intervals
 
 =head1 AUTHOR
 
