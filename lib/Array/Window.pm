@@ -5,19 +5,20 @@ use UNIVERSAL 'isa';
 
 use vars qw{$VERSION};
 BEGIN { 
-	$VERSION = 0.2;
+	$VERSION = 0.3;
 }
 
 # A description of the properties
 # 
-# source_start - The lowest index of the source array
-# source_end - The highest index of the source array
-# window_start - The lowest index of the data window
-# window_end - The highest index of the data window
-# window_length - The length of the window ( number of items inclusive )
+# source_start          - The lowest index of the source array
+# source_end            - The highest index of the source array
+# source_length         - The total length of the source
+# window_start          - The lowest index of the data window
+# window_end            - The highest index of the data window
+# window_length         - The length of the window ( number of items inclusive )
 # window_length_desired - The length of the window they would LIKE to have
-# previous_start - The index number of window_start for the "Previous" window
-# next_start - The index number of window_start for the "Next" window
+# previous_start        - The index number of window_start for the "Previous" window
+# next_start            - The index number of window_start for the "Next" window
 
 sub new {
 	my $class = shift;
@@ -27,6 +28,7 @@ sub new {
 	my $self = bless {
 		source_start          => undef,
 		source_end            => undef,
+		source_length         => undef,
 		window_start          => undef,
 		window_end            => undef,
 		window_length         => undef,
@@ -37,13 +39,36 @@ sub new {
 
 	# Check for a specific source
 	if ( $options{source} ) {
-		return undef unless isa( $options{source}, 'ARRAY' );
-		
-		$self->{source_start} = 0;
-		$self->{source_end} = $#{$options{source}};
+		unless ( ref $options{source} and isa( $options{source}, 'ARRAY' ) ) {
+			return undef;
+		}
+		$self->{source_start}  = 0;
+		$self->{source_end}    = $#{$options{source}};
+		$self->{source_length} = $self->{source_end} + 1;
+
 	} elsif ( defined $options{source_start} and defined $options{source_end} ) {
-		$self->{source_start} = $options{source_start};
-		$self->{source_end} = $options{source_end};
+		$self->{source_start}  = $options{source_start};
+		$self->{source_end}    = $options{source_end};
+		$self->{source_length} = $options{source_end} - $options{source_start} + 1;
+
+	} elsif ( defined $options{source_start} and defined $options{source_length} ) {
+		return undef unless $options{source_length} > 0;
+		$self->{source_start}  = $options{source_start};
+		$self->{source_end}    = $options{source_start} + $options{source_length} - 1;
+		$self->{source_length} = $options{source_length};
+
+	} elsif ( defined $options{source_end} and defined $options{source_length} ) {
+		return undef unless $options{source_length} > 0;
+		$self->{source_start}  = $options{source_end} - $options{source_length} + 1;
+		$self->{source_end}    = $options{source_end};
+		$self->{source_length} = $options{source_length};
+
+	} elsif ( defined $options{source_length} ) {
+		return undef unless $options{source_length} > 0;
+		$self->{source_start}  = 0;
+		$self->{source_end}    = $options{source_length} - 1;
+		$self->{source_length} = $options{source_length};
+
 	} else {
 		# Source not defined
 		return undef;
@@ -82,28 +107,28 @@ sub _calculate {
 
 	# First, finish the third of the window_ values.
 	# This will be either window_length or window_end.
-	$self->_calculate_window_end() unless defined $self->{window_end};
-	$self->_calculate_window_length() unless defined $self->{window_length};
+	$self->_calculate_window_end    unless defined $self->{window_end};
+	$self->_calculate_window_length unless defined $self->{window_length};
 
 	# Adjust the window back into the source if needed
 	if ( $self->{window_start} < $self->{source_start} ) {
 		$self->{window_start} += ($self->{source_start} - $self->{window_start});
-		$self->_calculate_window_end();
+		$self->_calculate_window_end;
 
 		# If this move puts window_end after source_end, fix it
 		if ( $self->{window_end} > $self->{source_end} ) { 
 			$self->{window_end} = $self->{source_end};
-			$self->_calculate_window_length();
+			$self->_calculate_window_length;
 		}
 	}
 	if ( $self->{window_end} > $self->{source_end} ) {
 		$self->{window_start} -= ($self->{window_end} - $self->{source_end});
-		$self->_calculate_window_end();
+		$self->_calculate_window_end;
 
 		# If this move puts window_start before source_start, fix it
 		if ( $self->{window_start} < $self->{source_start} ) {
 			$self->{window_start} = $self->{source_start};
-			$self->_calculate_window_length();
+			$self->_calculate_window_length;
 		}
 	}
 
@@ -148,14 +173,52 @@ sub _calculate_window_length {
 #####################################################################
 # Access methods
 
-sub source_start          { $_[0]->{source_start} }
-sub source_end            { $_[0]->{source_end} }
-sub window_start          { $_[0]->{window_start} }
-sub window_length         { $_[0]->{window_length} }
+sub source_start          { $_[0]->{source_start}          }
+sub source_end            { $_[0]->{source_end}            }
+sub source_length         { $_[0]->{source_length}         }
+sub window_start          { $_[0]->{window_start}          }
+sub window_length         { $_[0]->{window_length}         }
 sub window_length_desired { $_[0]->{window_length_desired} }
-sub window_end            { $_[0]->{window_end} }
-sub previous_start        { $_[0]->{previous_start} }
-sub next_start            { $_[0]->{next_start} }
+sub window_end            { $_[0]->{window_end}            }
+sub previous_start        { $_[0]->{previous_start}        }
+sub next_start            { $_[0]->{next_start}            }
+
+# Get an object representing the first window.
+# Returns 0 if we are currently the first window
+sub first {
+	my $self = shift;
+	my $class = ref $self;
+
+	# If the window_start is equal to the source_start, return false
+	return '' if $self->{source_start} == $self->{window_start};
+
+	# Create the first window
+	$class->new(
+		source_start  => $self->{source_start},
+		source_end    => $self->{source_end},
+		window_length => $self->{window_length_desired},
+		window_start  => $self->{source_start},
+		);
+}
+
+# Get an object representing the last window.
+# Returns false if we are already the last window.
+sub last {
+	my $self = shift;
+	my $class = ref $self;
+
+	# If the window_end is equal to the source_end, return false
+	return '' if $self->{source_end} == $self->{window_end};
+
+	# Create the last window
+	my $window_start = $self->{source_end} - $self->{window_length_desired} + 1;
+	$class->new(
+		source_start  => $self->{source_start},
+		source_end    => $self->{source_end},
+		window_start  => $window_start,
+		window_end    => $self->{source_end},
+		);
+}
 
 # Get an object representing the next window.
 # Returns 0 if there is no next window.
@@ -164,7 +227,7 @@ sub next {
 	my $class = ref $self;
 
 	# If there is no next, return false
-	return 0 unless defined $self->{next_start};
+	return '' unless defined $self->{next_start};
 
 	# Create the next window	
 	$class->new( 
@@ -180,14 +243,14 @@ sub previous {
 	my $class = ref $self;
 
 	# If there is no previou, return false
-	return 0 unless defined $self->{previous_start};
+	return '' unless defined $self->{previous_start};
 
 	# Create the previous window
 	$class->new(
-		source_start => $self->{source_start},
-		source_end => $self->{source_end},
+		source_start  => $self->{source_start},
+		source_end    => $self->{source_end},
 		window_length => $self->{window_length_desired},
-		window_start => $self->{previous_start},
+		window_start  => $self->{previous_start},
 		);
 }
 
@@ -197,8 +260,8 @@ sub previous {
 sub required {
 	my $self = shift;
 	return 1 unless $self->{source_start} == $self->{window_start};
-	return 1 unless $self->{source_end} == $self->{window_end};
-	0;
+	return 1 unless $self->{source_end}   == $self->{window_end};
+	'';
 }
 
 # $window->extract( \@array );
@@ -212,7 +275,7 @@ sub extract {
 
 	# Check that they match
 	return undef unless $self->{source_start} == 0;
-	return undef unless $self->{source_end} == $#$arrayref;
+	return undef unless $self->{source_end}   == $#$arrayref;
 
 	# Create the sub array
 	my @subarray = ();
@@ -226,7 +289,6 @@ sub extract {
 
 __END__
 
-
 =pod
 
 =head1 NAME
@@ -235,14 +297,14 @@ Array::Window - Calculate windows/subsets/pages of arrays.
 
 =head1 SYNOPSIS
 
-  # Your search routine returns an array of sorted results
-  # of unknown quantity.
+  # Your search routine returns an reference to an array
+  # of sorted results of unknown quantity.
   my $results = SomeSearch->find( 'blah' );
   
   # We want to display 20 results at a time
   my $Window = Array::Window->new( 
-  	source => $results,
-  	window_start => 0,
+  	source        => $results,
+  	window_start  => 0,
   	window_length => 20,
   	);
   
@@ -252,8 +314,10 @@ Array::Window - Calculate windows/subsets/pages of arrays.
   # Extract the subset from the array
   my $subset = $Window->extract( $results );
   
-  # Are there 'Next' or 'Previous' windows?
-  my $Next = $Window->next;
+  # Are there 'First', 'Last', 'Next' or 'Previous' windows?
+  my $First    = $Window->first;
+  my $Last     = $Window->last;
+  my $Next     = $Window->next;
   my $Previous = $Window->previous;
 
 =head1 DESCRIPTION
@@ -291,16 +355,18 @@ The C<new> constructor is very flexible with regards to the options that can
 be passed to it. However, this generally breaks down into deriving two things.
 
 Firstly, it needs know about the source, usually an array, but more 
-generically treated as a range of integers. For a typical 100 element array 
-C<@array>, you could use one of the following sets of options.
+generically handled as a range of integers. This means that although the 
+"first" element of the array would typically be zero, C<Array::Window> can
+handle ranges where the first element is something other than zero.
 
-  # EITHER
+For a typical 100 element array C<@array>, you could use any of the following
+sets of options for defining the source array.
+
   Array::Window->new( source => \@array );
-  
-  # OR
-  Array::Window->new( source_start => 0, source_end => 99 );
-
-The source value will ONLY be taken as an array reference.
+  Array::Window->new( source_length => 100 ); # Assume start at zero
+  Array::Window->new( source_start => 0, source_end => 99  );
+  Array::Window->new( source_start => 0, source_length => 100 );
+  Array::Window->new( source_end => 99,  source_length => 100 );
 
 Secondly, the object needs to know information about Window it will be 
 finding. Assuming a B<desired> window size of 10, and assuming we use the first
@@ -324,12 +390,16 @@ object.
 
 =head2 source_start
 
-Returns the index of the first source value, which will be 0.
+Returns the index of the first source value, which will usually be 0.
 
 =head2 source_end
 
 Returns the index of the last source value, which for array C<@array>, will be
 the same as C<$#array>.
+
+=head2 source_length
+
+Returns the number of elements in the source array.
 
 =head2 window_start
 
@@ -360,23 +430,35 @@ start of the previous window.
 If a 'next' window can be calculated, this will return the index of the start
 of the next window.
 
+=head2 first
+
+This method returns an C<Array::Window> object representing the first window,
+which you can then use as needed. Returns false if the current window is
+already the first window.
+
+=head2 last
+
+This method return an C<Array::Window> object representing the last window,
+which you can then use as needed. Returns false if the current window is
+already the last window.
+
 =head2 previous
 
 This method returns an C<Array::Window> object representing the previous 
-window, which you can then apply as needed. Returns C<0> if the window is
+window, which you can then apply as needed. Returns false if the window is
 already at the 'beginning' of the source, and no previous window exists.
 
 =head2 next
 
 This method returns an C<Array::Window> object representing the next window,
-which you can apply as needed. Returns C<0> if the window is already at the
+which you can apply as needed. Returns false if the window is already at the
 'end' of the source, and no window exists after this one.
 
 =head2 required
 
 Looks at the window and source and tries to determine if the entire source
 can be shown without the need for windowing. This can be usefull for interface
-code, as you can avoid generate 'next' of 'previous' controls at all.
+code, as you can avoid generating 'next' or 'previous' controls at all.
 
 =head2 extract \@array
 
@@ -385,11 +467,14 @@ window represents.
 
 =head1 SUPPORT
 
-Contact the author
+Bugs should be reported via the CPAN bug tracker at
+
+  http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Array%3A%3AWindow
+
+For other issues, contact the author
 
 =head1 TO DO
 
-- The C<first_window> and C<last_window> methods.
 - Determine how many windows there are.
 - C<human_values> method to return human readable values.
 
@@ -405,7 +490,7 @@ L<Set::Window> - For more math orientated windows
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002-2003 Adam Kennedy. All rights reserved.
+Copyright 2002 - 2004 Adam Kennedy. All rights reserved.
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 
