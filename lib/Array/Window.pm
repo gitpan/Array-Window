@@ -1,11 +1,11 @@
 package Array::Window;
 
+use 5.005;
 use strict;
-use UNIVERSAL 'isa';
 
 use vars qw{$VERSION};
 BEGIN { 
-	$VERSION = 0.4;
+	$VERSION = '1.00';
 }
 
 # A description of the properties
@@ -39,7 +39,7 @@ sub new {
 
 	# Check for a specific source
 	if ( $options{source} ) {
-		unless ( ref $options{source} and isa( $options{source}, 'ARRAY' ) ) {
+		unless ( ref $options{source} eq 'ARRAY' ) {
 			return undef;
 		}
 		$self->{source_start}  = 0;
@@ -479,9 +479,9 @@ window represents.
 
 Bugs should be reported via the CPAN bug tracker at
 
-  http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Array%3A%3AWindow
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Array-Window>
 
-For other issues, contact the author
+For other issues, or commercial enhancement or support, contact the author.
 
 =head1 TO DO
 
@@ -491,17 +491,16 @@ For other issues, contact the author
 
 =head1 AUTHOR
 
-        Adam Kennedy ( maintainer )
-        cpan@ali.as
-        http://ali.as/
+Adam Kennedy E<lt>cpan@ali.asE<gt>
 
 =head1 SEE ALSO
 
-L<Set::Window> - For more math orientated windows
+L<Set::Window>, L<http://ali.as/>
 
 =head1 COPYRIGHT
 
-Copyright 2002 - 2004 Adam Kennedy. All rights reserved.
+Copyright 2002 - 2006 Adam Kennedy. All rights reserved.
+
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

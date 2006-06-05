@@ -3,25 +3,29 @@
 # Formal testing for Array::Window
 
 use strict;
-use File::Spec::Functions qw{:ALL};
-use lib catdir( updir(), updir(), 'modules' ), # Development testing
-        catdir( updir(), 'lib' );              # Installation testing
-use UNIVERSAL 'isa';
+use lib ();
+use File::Spec::Functions ':ALL';
+BEGIN {
+	$| = 1;
+	unless ( $ENV{HARNESS_ACTIVE} ) {
+		require FindBin;
+		$FindBin::Bin = $FindBin::Bin; # Avoid a warning
+		chdir catdir( $FindBin::Bin, updir() );
+		lib->import(
+			catdir('blib', 'arch'),
+			catdir('blib', 'lib' ),
+			catdir('lib'),
+			);
+	}
+}
+
 use Test::More tests => 56;
 
 # Check their perl version
 BEGIN {
-	$| = 1;
 	ok( $] >= 5.005, "Your perl is new enough" );
+	use_ok( 'Array::Window' );
 }
-
-
-
-
-
-# Does the module load
-use_ok( 'Array::Window' );
-
 
 # Run the bulk of the tests
 my $group = 'basic';
@@ -43,7 +47,7 @@ foreach ( <DATA> ) {
 		window_length => $parts[4],
 		);
 	ok( defined $Object, "$group:$test_id defined " );
-	ok( isa( $Object, 'Array::Window' ), "$group:$test_id is an Array::Window" );
+	isa_ok( $Object, 'Array::Window' );
 	ok( compare($Object->human_source_start, $parts[0] + 1), "$group:$test_id ->human_source_start returns correct" );
 	ok( compare($Object->human_source_end,   $parts[1] + 1), "$group:$test_id ->human_source_end returns correct" );
 	ok( compare($Object->source_length,         $parts[2]),  "$group:$test_id ->source_length returns correct" );

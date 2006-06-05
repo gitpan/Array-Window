@@ -1,5 +1,9 @@
 Revision history for Perl extension Array::Window
 
+1.00 Tue  5 Jun 2006
+	- Removed use of UNIVERSAL::isa
+	- Upgraded to Module::Install 0.62
+
 0.4  Sat Mar 13 2004
 	- Added the ->human_* methods
 
