@@ -3,32 +3,16 @@
 # Formal testing for Array::Window
 
 use strict;
-use lib ();
-use File::Spec::Functions ':ALL';
 BEGIN {
-	$| = 1;
-	unless ( $ENV{HARNESS_ACTIVE} ) {
-		require FindBin;
-		$FindBin::Bin = $FindBin::Bin; # Avoid a warning
-		chdir catdir( $FindBin::Bin, updir() );
-		lib->import(
-			catdir('blib', 'arch'),
-			catdir('blib', 'lib' ),
-			catdir('lib'),
-			);
-	}
+	$|  = 1;
+	$^W = 1;
 }
 
-use Test::More tests => 56;
-
-# Check their perl version
-BEGIN {
-	ok( $] >= 5.005, "Your perl is new enough" );
-	use_ok( 'Array::Window' );
-}
+use Test::More tests => 54;
+use Array::Window ();
 
 # Run the bulk of the tests
-my $group = 'basic';
+my $group   = 'basic';
 my $test_id = 0;
 foreach ( <DATA> ) {
 	$test_id++;
@@ -45,7 +29,7 @@ foreach ( <DATA> ) {
 		source_end    => $parts[1],
 		window_start  => $parts[3],
 		window_length => $parts[4],
-		);
+	);
 	ok( defined $Object, "$group:$test_id defined " );
 	isa_ok( $Object, 'Array::Window' );
 	ok( compare($Object->human_source_start, $parts[0] + 1), "$group:$test_id ->human_source_start returns correct" );

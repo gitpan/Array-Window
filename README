@@ -7,23 +7,23 @@ SYNOPSIS
       my $results = SomeSearch->find( 'blah' );
   
       # We want to display 20 results at a time
-      my $Window = Array::Window->new( 
+      my $window = Array::Window->new( 
             source        => $results,
             window_start  => 0,
             window_length => 20,
             );
   
       # Do we need to split into pages at all?
-      my $show_pages = $Window->required;
+      my $show_pages = $window->required;
   
       # Extract the subset from the array
-      my $subset = $Window->extract( $results );
+      my $subset = $window->extract( $results );
   
-      # Are there 'First', 'Last', 'Next' or 'Previous' windows?
-      my $First    = $Window->first;
-      my $Last     = $Window->last;
-      my $Next     = $Window->next;
-      my $Previous = $Window->previous;
+      # Are there 'first', 'last', 'next' or 'previous' windows?
+      my $first    = $window->first;
+      my $last     = $window->last;
+      my $next     = $window->next;
+      my $previous = $window->previous;
 
 DESCRIPTION
     Many applications require that a large set of results be broken down
@@ -46,9 +46,9 @@ DESCRIPTION
     you want to generate values for human messages, you should instead use
     the following.
 
-      print 'Displaying Widgets ' . $Window->human_window_start
-            . ' to ' . $Window->human_window_end
-            . ' of ' . $Window->human_source_end;
+      print 'Displaying Widgets ' . $window->human_window_start
+            . ' to ' . $window->human_window_end
+            . ' of ' . $window->human_source_end;
 
 METHODS
   new %options
@@ -177,13 +177,13 @@ TO DO
     - Provide the option to only work at strict intervals
 
 AUTHOR
-    Adam Kennedy <cpan@ali.as>
+    Adam Kennedy <adamk@cpan.org>
 
 SEE ALSO
     Set::Window, <http://ali.as/>
 
 COPYRIGHT
-    Copyright 2002 - 2007 Adam Kennedy.
+    Copyright 2002 - 2008 Adam Kennedy.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
